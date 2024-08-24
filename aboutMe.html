@@ -3,161 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Me - Pranav Jain</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Pranav Jain - About Me</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Poppins", sans-serif; 
-        }
-
         body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
             background-color: #2C3E50;
+            color: #ECF0F1;
+        }
+
+        .navbar {
             display: flex;
-            min-height: 100vh;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
             padding: 20px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 30px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            color: #F1C40F;
-        }
-
-        p {
-            font-size: 24px;
-            margin: 20px 0;
-            color: #ECF0F1;
-        }
-
-        .typewriter {
-            display: flex;
-            justify-content: center;
-            font-size: 24px;
-            margin-top: 20px;
-        }
-
-        .typewriter .static-text {
-            color: #ECF0F1;
-            font-size: 24px;
-            font-weight: 400;
-        }
-
-        .typewriter .dynamic-text {
-            margin-left: 8px;
-            line-height: 24px;
-            height: 24px;
-            overflow: hidden;
-        }
- 
-        .dynamic-text li {
-            list-style: none;
-            color: #F1C40F;
-            font-size: 24px;
-            font-weight: 500;
-            position: relative;
-            top: 0;
-            animation: slide 20s steps(5) infinite;
-        }
-
-        @keyframes slide {
-            100% {
-                top: -120px;
-            }
-        }
-
-        .dynamic-text li::after {
-            content: "";
-            left: 0;
-            position: absolute;
-            height: 100%;
-            width: 100%;
-            border-left: 2px solid #F1C40F;
-            animation: typing 4s steps(15) infinite;
-            background-color: #2C3E50;
-        }
-
-        @keyframes typing {
-            40%,
-            60% {
-                left: calc(100%);
-            }
-            100% {
-                left: 0;
-            }
-        }   
-
-        .social-icons {
-            margin-top: 40px;
-        }
-
-        .social-icons a {
-            color: #ECF0F1;
-            margin: 0 15px;
-            font-size: 24px;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .social-icons a:hover {
-            color: #F1C40F;
-        }
-
-        .sidebar {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .sidebar a {
-            color: #ECF0F1;
-            font-size: 18px;
-            text-decoration: none;
-            margin: 15px 0;
-            padding: 10px 20px;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .sidebar a::after {
-            content: "";
-            position: absolute;
-            width: 0;
-            height: 2px;
-            background-color: #F1C40F;
-            left: 0;
-            bottom: -5px;
-            transition: width 0.3s ease;
-        }
-        
-        .sidebar a:hover::after {
-            width: 100%;
-        }
-        
-        .sidebar a.about-link {
-            color: #F1C40F;
-        }
-        
-        .sidebar a.home-link:hover::after,
-        .sidebar a.projects-link:hover::after {
-            width: 100%;
-        }
-        
-
-        .sidebar a:hover {
-            color: #F1C40F;
+            background-color: #34495E;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .photo-container {
@@ -177,57 +39,95 @@
             background-size: cover;
             background-position: center;
         }
-
-        .name-overlay {
-            color: #F1C40F;
-            font-size: 45px;
+        
+        .navbar .title {
+            font-size: 24px;
             font-weight: bold;
-            margin-top: 20px;
+            color: #F1C40F;
+            margin-left: 20px;
         }
 
-        .description {
-            max-width: 800px;
-            margin-top: 40px;
+        .navbar .nav-links a {
             color: #ECF0F1;
+            margin: 0 15px;
+            text-decoration: none;
             font-size: 18px;
-            line-height: 1.6;
+            position: relative;
+            padding-bottom: 5px;
         }
+
+        .navbar .nav-links a:hover {
+            color: #F1C40F;
+        }
+
+        .navbar .nav-links a::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: #F1C40F;
+            visibility: hidden;
+            transform: scaleX(0);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .navbar .nav-links a:hover::before {
+            visibility: visible;
+            transform: scaleX(1);
+        }
+
+        .navbar .nav-links a.active {
+            color: #F1C40F;
+        }
+
+        /* Adjusting the content area for better alignment */
+        .main-content {
+            text-align: center;
+            margin-top: 60px; /* Ensure content is below navbar */
+            padding: 20px;
+        }
+
+        .main-content h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #F1C40F;
+        }
+
+        
+
+        .main-content p {
+            font-size: 18px;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: #ECF0F1;
+        }
+        
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <a href="index.html" class="home-link">Home</a>
-        <a href="#about" class="about-link">About</a>
-        <a href="project.html" class="projects-link">Projects</a>
-    </div>
-    <div class="content">
-        <div class="photo-container">
-            <div class="photo-circle"></div>
-            <div class="name-overlay">PRANAV JAIN</div>
-        </div>
-        <h1>About Me</h1>
-        <div class="typewriter">
-            <div class="static-text">I am</div>
-            <ul class="dynamic-text">
-                <li><span>Tech Enthusiast</span></li>
-                <li><span>Coder</span></li>
-                <li><span>Developer</span></li>
-                <li><span>Problem Solver</span></li>
-                <li><span>Innovator</span></li>
-            </ul>
-        </div>
-        <div class="description">
-            I am Pranav Jain, the Co-Founder and CTO of Service Lane, driven by a passion for innovation and technology. 
-            To me, every challenge is an opportunity to create solutions that make life easier and more connected. 
-            My journey in computer science, combined with my deep interest in Python, Linux, and cloud computing, 
-            shapes how I approach problems with curiosity, creativity, and a commitment to continuous learning. 
-            I believe in the power of technology to transform lives, and my goal is to bridge the gap between people 
-            and the services they need through innovative, tech-driven solutions.
-        </div>
-        <div class="social-icons">
+    <div class="navbar">
+        <div class="title">About Me</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#" class="active">About</a>
+            <a href="project.html">Projects</a>
             <a href="https://www.linkedin.com/in/pranav-jain-4201bb246" target="_blank"><i class="fab fa-linkedin"></i></a>
             <a href="https://github.com/PranavJa1n" target="_blank"><i class="fab fa-github"></i></a>
         </div>
+    </div>
+
+    <div class="main-content">
+        <!--<div class="profile-pic">
+            <img src="myPhoto.jpeg" alt="Profile Picture" style="width: 100%; height: 100%;">
+        </div>-->
+        <div class="photo-container">
+            <div class="photo-circle"></div>
+        </div>
+        <h1>PRANAV JAIN</h1>
+        <p>I am Pranav Jain, the Co-Founder and CTO of Service Lane, driven by a passion for innovation and technology. To me, every challenge is an opportunity to create solutions that make life easier and more connected. My journey in computer science, combined with my deep interest in Python, Linux, and cloud computing, shapes how I approach problems with curiosity, creativity, and a commitment to continuous learning. I believe in the power of technology to transform lives, and my goal is to bridge the gap between people and the services they need through innovative, tech-driven solutions.</p>
     </div>
 </body>
 </html>
