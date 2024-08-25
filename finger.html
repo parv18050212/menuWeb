@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Detection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
+    <style>
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" autoplay></video>
+    <canvas id="canvas"></canvas>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Load the Handpose model
+        async function loadModel() {
+            return await handpose.load();
+        }
+
+        // Start video stream
+        async function setupCamera() {
+            video.width = window.innerWidth;
+            video.height = window.innerHeight;
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true
+            });
+
+            video.srcObject = stream;
+
+            return new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    resolve(video);
+                };
+            });
+        }
+
+        // Detect hand landmarks
+        async function detectHands(model) {
+            const predictions = await model.estimateHands(video);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (predictions.length > 0) {
+                predictions.forEach(prediction => {
+                    const landmarks = prediction.landmarks;
+
+                    // Draw circles on the landmarks
+                    for (let i = 0; i < landmarks.length; i++) {
+                        const x = landmarks[i][0];
+                        const y = landmarks[i][1];
+                        
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                        ctx.fillStyle = "red";
+                        ctx.fill();
+                    }
+
+                    // Finger count logic
+                    let fingerCount = 0;
+
+                    // Thumb: Check if thumb tip is to the right of thumb base knuckle
+                    if (landmarks[4][0] < landmarks[3][0]) {
+                        fingerCount += 1;
+                    }
+
+                    // Check each finger: If the tip is higher than the joint below it
+                    for (let i = 8; i <= 20; i += 4) {
+                        if (landmarks[i][1] < landmarks[i - 2][1]) {
+                            fingerCount += 1;
+                        }
+                    }
+
+                    // Display the finger count on the canvas
+                    ctx.font = '30px Arial';
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(`Fingers: ${fingerCount}`, 10, 50);
+                });
+            }
+
+            requestAnimationFrame(() => detectHands(model));
+        }
+
+        async function main() {
+            await setupCamera();
+            video.play();
+
+            const model = await loadModel();
+            detectHands(model);
+        }
+
+        main();
+    </script>
+</body>
+</html>

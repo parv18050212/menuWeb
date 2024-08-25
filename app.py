@@ -22,6 +22,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import boto3
+import mediapipe as mp
+import numpy as np
+from ctypes import cast, POINTER
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+import screen_brightness_control as sbc
+import pyautogui 
 
 app = Flask(__name__)
 
@@ -386,6 +393,124 @@ def process_command(command):
         return "Exiting terminal... Goodbye!"
     else:
         return f"Command not recognized: {command}"
+    
+
+@app.route('/process', methods=['GET'])
+def process_frame():
+    # Initialize MediaPipe Hand module inside the function
+    mp_hands = mp.solutions.hands
+    mp_drawing = mp.solutions.drawing_utils
+
+    # Function to get the system audio interface
+    def get_volume_interface():
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(
+            IAudioEndpointVolume.iid, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        return volume
+
+    # Initialize webcam
+    cap = cv2.VideoCapture(0)
+    
+    # Get volume interface
+    volume = get_volume_interface()
+    volume_range = volume.GetVolumeRange()
+    min_vol, max_vol = volume_range[0], volume_range[1]
+
+    # Read frame from webcam
+    success, frame = cap.read()
+    if not success:
+        cap.release()
+        return jsonify({'error': 'Failed to capture frame'}), 500
+
+    # Convert the BGR image to RGB
+    img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    # Process the image and detect hands
+    with mp_hands.Hands() as hands:
+        results = hands.process(img_rgb)
+
+    # Prepare the response data
+    data = {
+        'finger_count': 0,
+        'volume_percent': 0,
+        'brightness': 0,
+        'scroll': 0,
+        'switch_app': False,
+    }
+
+    prev_hand_center_y = None
+    prev_hand_center_x = None
+
+    if results.multi_hand_landmarks:
+        for hand_landmarks in results.multi_hand_landmarks:
+            landmarks = hand_landmarks.landmark
+            thumb_tip = landmarks[4]
+            index_tip = landmarks[8]
+
+            # Calculate the distance between thumb tip and index tip
+            distance = np.sqrt((thumb_tip.x - index_tip.x) ** 2 + (thumb_tip.y - index_tip.y) ** 2)
+
+            # Calculate vertical and horizontal distances between thumb tip and index tip
+            vertical_distance = abs(thumb_tip.y - index_tip.y)
+            horizontal_distance = abs(thumb_tip.x - index_tip.x)
+
+            # Control brightness with vertical distance
+            brightness = np.interp(vertical_distance, [0.02, 0.4], [0, 100])
+            sbc.set_brightness(int(brightness))
+            data['brightness'] = int(brightness)
+
+            # Control volume with horizontal distance
+            vol = np.interp(horizontal_distance, [0.02, 0.4], [min_vol, max_vol])
+            volume.SetMasterVolumeLevel(vol, None)
+            current_vol = volume.GetMasterVolumeLevel()
+            volume_percent = np.interp(current_vol, [min_vol, max_vol], [0, 100])
+            data['volume_percent'] = int(volume_percent)
+
+            # Count the number of fingers
+            fingers = []
+            if landmarks[4].x < landmarks[3].x:
+                fingers.append(1)
+            else:
+                fingers.append(0)
+
+            for i in range(8, 21, 4):
+                if landmarks[i].y < landmarks[i - 2].y:
+                    fingers.append(1)
+                else:
+                    fingers.append(0)
+
+            data['finger_count'] = fingers.count(1)
+
+            # Get the center y and x position of the hand
+            hand_center_y = np.mean([landmark.y for landmark in landmarks])
+            hand_center_x = np.mean([landmark.x for landmark in landmarks])
+
+            # Scroll if the hand moves up or down significantly
+            if prev_hand_center_y is not None:
+                delta_y = hand_center_y - prev_hand_center_y
+                if abs(delta_y) > 0.05:
+                    scroll_amount = int(delta_y * 1000)
+                    pyautogui.scroll(scroll_amount)
+                    data['scroll'] = scroll_amount
+
+            # Switch application if the hand moves left or right significantly
+            if prev_hand_center_x is not None:
+                delta_x = hand_center_x - prev_hand_center_x
+                if delta_x > 0.05:
+                    pyautogui.hotkey('alt', 'tab')
+                    data['switch_app'] = True
+                elif delta_x < -0.05:
+                    pyautogui.hotkey('alt', 'shift', 'tab')
+                    data['switch_app'] = True
+
+            # Update the previous hand center positions
+            prev_hand_center_y = hand_center_y
+            prev_hand_center_x = hand_center_x
+
+    cap.release()
+    return jsonify(data)
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
