@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, redirect, url_for, render_template_string, render_template, Response
+from flask import Flask, request, send_file, redirect, url_for, render_template_string, render_template, Response, jsonify
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -15,6 +15,7 @@ from threading import Thread
 from twilio.rest import Client
 import geocoder
 import cv2
+import subprocess
 
 app = Flask(__name__)
 
@@ -222,6 +223,89 @@ def gen_frames():
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route("/docker_image_pull", methods=["POST"])
+def docker_img_pull():
+    image = request.form.get('image')
+    cmd = f"docker pull {image}"
+    output = subprocess.getstatusoutput(cmd)
+    if output[0] == 0:
+        return jsonify({"message": "Image downloaded successfully.", "status": "success"})
+    else:
+        return jsonify({"message": "Image download failed.", "status": "fail"})
+
+
+@app.route("/launch_docker", methods=["POST"])
+def docker_launch():
+    container_name = request.form.get('container_name')
+    image = request.form.get('image')
+    cmd = f"docker run -dit --name {container_name} {image}"
+    output = subprocess.getstatusoutput(cmd)
+    if output[0] == 0:
+        return jsonify({"message": "Docker container launched successfully.", "status": "success", "container_id": output[1]})
+    else:
+        return jsonify({"message": "Failed to launch Docker container.", "status": "fail"})
+
+
+@app.route("/docker_stop", methods=["POST"])
+def docker_stop():
+     container_name = request.form.get('container_name')
+     cmd = f"docker stop {container_name}"
+     output = subprocess.getstatusoutput(cmd)
+     if output[0] == 0:
+        return jsonify({"message": "Docker container stopped successfully.", "status": "success"})
+     else:
+        return jsonify({"message": "Failed to stop Docker container.", "status": "fail"})
+
+@app.route("/docker_start", methods=["POST"])
+def docker_start():
+    container_name = request.form.get('container_name')
+    cmd = f"docker start {container_name}"
+    output = subprocess.getstatusoutput(cmd)
+    if output[0] == 0:
+        return jsonify({"message": "Docker container started successfully.", "status": "success"})
+    else:
+        return jsonify({"message": "Failed to start Docker container.", "status": "fail"})
+
+@app.route("/docker_status", methods=["POST"])
+def docker_status():
+    container_name = request.form.get('container_name')
+    cmd = f"docker ps -a --filter name={container_name} --format '{{{{.ID}}}} {{{{.Names}}}} {{{{.Status}}}}'"
+    output = subprocess.getstatusoutput(cmd)
+    if output[0] == 0:
+        return jsonify({"message": output[1], "status": "success"})
+    else:
+        return jsonify({"message": "Failed to get Docker container status.", "status": "fail"})
+
+@app.route("/docker_remove", methods=["POST"])
+def docker_remove():
+    container_name = request.form.get('container_name')
+    cmd = f"docker rm {container_name}"
+    output = subprocess.getstatusoutput(cmd)
+    if output[0] == 0:
+        return jsonify({"message": "Docker container removed successfully.", "status": "success"})
+    else:
+        return jsonify({"message": "Failed to remove Docker container.", "status": "fail"})
+
+@app.route("/docker_logs", methods=["POST"])
+def docker_logs():
+    container_name = request.form.get('container_name')
+    cmd = f"docker logs {container_name}"
+    output = subprocess.getstatusoutput(cmd)
+    if output[0] == 0:
+        return jsonify({"message": output[1], "status": "success"})
+    else:
+        return jsonify({"message": "Failed to get Docker container logs.", "status": "fail"})
+
+@app.route("/docker_image_remove", methods=["POST"])
+def docker_img_remove():
+    image = request.form.get('image')
+    cmd = f"docker rmi -f {image}"
+    output = subprocess.getstatusoutput(cmd)
+    if output[0] == 0:
+        return jsonify({"message": "Docker image removed successfully.", "status": "success"})
+    else:
+            return jsonify({"message": "Failed to remove Docker image.", "status": "fail"})
 
 if __name__ == '__main__':
     app.run(debug=True)
