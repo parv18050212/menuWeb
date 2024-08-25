@@ -16,6 +16,12 @@ from twilio.rest import Client
 import geocoder
 import cv2
 import subprocess
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import boto3
 
 app = Flask(__name__)
 
@@ -307,5 +313,59 @@ def docker_img_remove():
     else:
             return jsonify({"message": "Failed to remove Docker image.", "status": "fail"})
 
+@app.route('/ml', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        file = request.files['file']
+        target_column = request.form.get('target')
+        if file and file.filename.endswith('.csv'):
+            # Setup folder to save uploaded files
+            upload_folder = 'uploads'
+            if not os.path.exists(upload_folder):
+                os.makedirs(upload_folder)
+            file_path = os.path.join(upload_folder, file.filename)
+            file.save(file_path)
+            df = pd.read_csv(file_path)
+            if target_column not in df.columns:
+                return "Error: Target column not found in the dataset", 400
+            X = df.drop(target_column, axis=1)
+            y = df[target_column]
+            # Check if all columns are numeric
+            if not all(pd.api.types.is_numeric_dtype(X[col]) for col in X.columns):
+                X = pd.get_dummies(X)
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+            scaler = StandardScaler()
+            X_train = scaler.fit_transform(X_train)
+            X_test = scaler.transform(X_test)
+            model = RandomForestClassifier(n_estimators=100, random_state=42)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            accuracy = accuracy_score(y_test, y_pred)
+            return f'Accuracy of the model: {accuracy:.2f}'
+    return 'Please upload a CSV file and specify the target column.'
+
+@app.route('/create_instance', methods=['POST'])
+def runec2():
+    
+    image_id = request.form.get('image_id')
+    instance_type = request.form.get('instance_type')
+    num_instances = int(request.form.get('num_instances'))
+    region = request.form.get('region')
+    
+    session = boto3.Session(region_name=region)
+    ec2 = session.resource('ec2')
+    def ciec2():
+        instances = ec2.create_instances(
+        ImageId=image_id,  
+        InstanceType=instance_type,
+        MinCount=1,
+        MaxCount=1
+        )
+    for i in range(num_instances):
+        ciec2()
+    return 'Done'
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
+    
+    

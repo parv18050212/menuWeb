@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Dataset</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2C3E50; /* Dark background color */
+            color: #ECF0F1; /* Light text color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            color: #F1C40F; /* Highlight color */
+            margin-bottom: 20px;
+        }
+        form {
+            background-color: #34495E; /* Slightly lighter dark background */
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            display: inline-block;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="file"],
+        input[type="text"],
+        input[type="submit"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #BDC3C7;
+            border-radius: 4px;
+        }
+        input[type="file"] {
+            background-color: #ECF0F1;
+            color: #2C3E50;
+        }
+        input[type="text"] {
+            background-color: #BDC3C7;
+            color: #2C3E50;
+        }
+        input[type="submit"] {
+            background-color: #F1C40F; /* Highlight color for button */
+            color: #2C3E50;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        input[type="submit"]:hover {
+            background-color: #F39C12; /* Slightly darker highlight color on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Your CSV Dataset</h1>
+        <form action="http://127.0.0.1:5000/ml" method="post" enctype="multipart/form-data">
+            <label for="file">CSV File:</label>
+            <input type="file" id="file" name="file" accept=".csv" required><br>
+            
+            <label for="target">Target Column:</label>
+            <input type="text" id="target" name="target" required><br>
+            
+            <input type="submit" value="Upload and Process">
+        </form>
+    </div>
+</body>
+</html>
