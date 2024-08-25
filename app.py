@@ -387,6 +387,21 @@ def process_command(command):
     else:
         return f"Command not recognized: {command}"
 
+@app.route('/s3')
+def upload_form():
+    return render_template('s3.html')
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    s3 = boto3.client('s3')
+    if 'file' not in request.files:
+        return "No file part"
+    file = request.files['file']
+    if file.filename == '':
+        return "No selected file"
+    bucket_name = 'mymenuprojectbucket'
+    s3.upload_fileobj(file, bucket_name, file.filename)
+    return f"File '{file.filename}' uploaded to bucket '{bucket_name}'."
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
     
