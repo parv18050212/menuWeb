@@ -97,7 +97,7 @@ def gsearch():
     r = []
     if query:
         count = 0
-        for j in search(query, num_results=5):
+        for j in search(query):
             r.append(j)
             count += 1
             if count == 5:

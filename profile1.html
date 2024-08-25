@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="profile-section">
+            <img src="myPhoto.jpeg" alt="Profile Image" class="profile-image">
+            <div class="intro">
+                <p class="greeting">Hello Everyone <span>👋</span></p>
+                <h1>I'm Parv Agarwal</h1>
+                <h2>I am a <span class="typewriter"></span></h2>
+                <div class="social-media">
+                    <span class="social-icon"><a href="https://www.linkedin.com/in/parv-agarwal-a6a02b289/" target="_blank" class="social-icon">
+                        <i class="fa-brands fa-linkedin"></i>
+                      </a>
+                      </span>
+                    <span class="social-icon"><a href="https://github.com/parv18050212" target="_blank" class="social-icon">
+                        <i class="fa-brands fa-github"></i>
+                      </a></span>
+                    <span class="social-icon"><a href="https://www.instagram.com/parv_agarwal.19/" target="_blank" class="social-icon">
+                        <i class="fa-brands fa-instagram"></i>
+                      </a></span>
+                </div>
+            </div>
+            <div class="contact-info">
+                <p><span class="icon">📅</span> 17.05.2005</p>
+                <p><span class="icon">📍</span> Mathura, Uttar Pradesh, India</p>
+                <p><span class="icon">📞</span> 8126187270</p>
+                <p><span class="icon">✉️</span> parvagarwal73@gmail.com</p>
+            </div>
+        </div>
+
+        <div class="description">
+            <p>I’m Parv Agarwal, a B.Tech student at GLA University specializing in AI, ML, and IoT. As Co-Founder and CEO of Marital Matters, I focus on using technology to simplify the divorce process in India. My internship at LinuxWorld Informatics Pvt Ltd provided me with valuable experience in integrating Generative AI with cloud platforms, including DevOps and Google Kubernetes Engine. This has been crucial in enhancing my technical skills and understanding of AI solutions. At GLA University’s Entrepreneurship Cell, I contribute to fostering innovation and entrepreneurship. I’m keen to connect with others and explore new opportunities for collaboration and growth.</p>
+        </div>
+
+        <div class="what-i-do">
+            <h3>What I do</h3>
+            <div class="services">
+                <div class="service">
+                    <span class="icon">🖥️</span>
+                    <p>Web Sites and Platforms</p>
+                </div>
+                <div class="service">
+                    <span class="icon">📱</span>
+                    <p>Mobile Applications</p>
+                </div>
+                <div class="service">
+                    <span class="icon">📈</span>
+                    <p>SEO Optimization</p>
+                </div>
+                <div class="service">
+                    <span class="icon">💻</span>
+                    <p>DevOps</p>
+                </div>
+                <div class="service">
+                    <span class="icon">♟️</span>
+                    <p>Strategy and Branding</p>
+                </div>
+                <div class="service">
+                    <span class="icon">💼</span>
+                    <p>Entrepreneur</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+    const typewriterElement = document.querySelector(".typewriter");
+    const textArray = ["AIML Enthusiast", "DevOps Enthusiast", "Web Developer", "Mobile App Developer"];
+    const typingDelay = 100;
+    const erasingDelay = 100;
+    const newTextDelay = 1000; // Delay between current and next text
+    let textArrayIndex = 0;
+    let charIndex = 0;
+
+    function type() {
+        if (charIndex < textArray[textArrayIndex].length) {
+            typewriterElement.textContent += textArray[textArrayIndex].charAt(charIndex);
+            charIndex++;
+            setTimeout(type, typingDelay);
+        } else {
+            setTimeout(erase, newTextDelay);
+        }
+    }
+
+    function erase() {
+        if (charIndex > 0) {
+            typewriterElement.textContent = textArray[textArrayIndex].substring(0, charIndex - 1);
+            charIndex--;
+            setTimeout(erase, erasingDelay);
+        } else {
+            textArrayIndex++;
+            if (textArrayIndex >= textArray.length) textArrayIndex = 0;
+            setTimeout(type, typingDelay + 1100);
+        }
+    }
+
+    setTimeout(type, newTextDelay + 250);
+});
+
+    </script>
+   
+<div class="project">
+    <h1>Projects</h1>
+</div>
+<div class="content">
+    <div class="button-container">
+        <a href="http://127.0.0.1:5000/geo"><button>Geo Coordinates</button></a>
+        <button onclick="location.href='email.html'">Send Emails</button>
+        <a href="http://127.0.0.1:5000/sendemails"><button>Send Bulk Emails</button></a>
+        <button onclick="window.location.href='gsearch.html'">Google Search</button>
+        <button onclick="window.location.href='convertTextToSpeech.html'">Text To Speech</button>
+        <a href="http://127.0.0.1:5000/schedule_email"><button>Schedule Email</button></a>
+        <a href="http://127.0.0.1:5000/sms"><button>SMS</button></a>
+        <button onclick="window.location.href='camfilter.html'">Open Camera and apply filter</button>
+        <a href="http://127.0.0.1:5000/geolocation"><button>Geo location</button></a>
+        <a href="http://127.0.0.1:5000/camglasses"><button>Sunglasses Filter</button></a>
+        <button onclick="window.location.href='docker.html'">Docker Managment System</button>
+        <a href="http://127.0.0.1:5000/s3"><button>Upload on S3</button></a>
+        <button onclick="window.location.href='jsvid.html'">Video Capture using JS</button>
+        <button onclick="window.location.href='JStts.html'">Text to Speech using JS</button>
+        <button onclick="window.location.href='photoJS.html'">Photo Capture using JS</button>
+        <button onclick="window.location.href='ml.html'">Check ML Accuracy</button>
+        <button onclick="window.location.href='ec2.html'">Launch EC2 Instance</button>
+        <a href="http://127.0.0.1:5000/terminal"><button>Linux Terminal</button></a>
+        <a href="http://127.0.0.1:5000/bmi"><button>BMI Calculator</button></a>
+        
+    </div>
+</div>
+</body>
+</html>
