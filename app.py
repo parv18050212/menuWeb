@@ -22,40 +22,38 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import boto3
-import mediapipe as mp
-import numpy as np
-from ctypes import cast, POINTER
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-import screen_brightness_control as sbc
-import pyautogui 
 
 app = Flask(__name__)
 
-@app.route('/sendemails', methods=['POST'])
+@app.route('/sendemails', methods=['GET', 'POST'])
 def send_emails():
-    data = request.get_json()
-    emails = data['emails']
-    subject = data['subject']
-    message = data['message']
-    sender_email = "pranav.avlok@gmail.com"
-    sender_password = "qtzi vtbd wgyu ynei"
-    for email in emails:
-        try:
-            msg = MIMEMultipart()
-            msg['From'] = sender_email
-            msg['To'] = email
-            msg['Subject'] = subject
-            msg.attach(MIMEText(message, 'plain'))
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(sender_email, sender_password)
-            text = msg.as_string()
-            server.sendmail(sender_email, email, text)
-            server.quit()
-        except Exception as e:
-            return jsonify({"status": "error", "message": str(e)})
-    return jsonify({"status": "success", "message": "Emails sent successfully!"})
+    success_message = None
+    error_message = None
+    if request.method == 'POST':
+        emails = request.form.get('emails').split(',')
+        subject = request.form.get('subject')
+        message = request.form.get('message')
+        sender_email = "pranav.avlok@gmail.com"
+        sender_password = "qtzi vtbd wgyu ynei"
+        for email in emails:
+            try:
+                msg = MIMEMultipart()
+                msg['From'] = sender_email
+                msg['To'] = email.strip()  # Strip any extra whitespace
+                msg['Subject'] = subject
+                msg.attach(MIMEText(message, 'plain'))
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(sender_email, sender_password)
+                text = msg.as_string()
+                server.sendmail(sender_email, email.strip(), text)
+                server.quit()
+            except Exception as e:
+                error_message = f"Error sending to {email}: {str(e)}"
+                break
+        else:
+            success_message = "Emails sent successfully!"
+    return render_template('bulk_email.html', success_message=success_message, error_message=error_message)
 
 @app.route("/email", methods=["POST"])
 def send_email():
@@ -75,17 +73,23 @@ def send_email():
     server.send_message(msg)
     server.quit()
     return "Email sent successfully"
-
-@app.route('/geo', methods=['GET'])
+        
+@app.route('/geo', methods=['GET', 'POST'])
 def geo():
-    location_name = request.args.get('location')
-    if location_name:
-        geolocator = Nominatim(user_agent="my_geocoder")
-        location = geolocator.geocode(location_name)
-        if location:
-            return {"latitude": location.latitude, "longitude": location.longitude}
-        else:
-            return {"error": "Location not found"}
+    latitude = None
+    longitude = None
+    error = None
+    if request.method == 'POST':
+        location_name = request.form.get('location')
+        if location_name:
+            geolocator = Nominatim(user_agent="my_geocoder")
+            location = geolocator.geocode(location_name)
+            if location:
+                latitude = location.latitude
+                longitude = location.longitude
+            else:
+                error = "Location not found"
+    return render_template('geo.html', latitude=latitude, longitude=longitude, error=error)
         
 @app.route("/gsearch", methods=["POST"])
 def gsearch():
@@ -173,19 +177,25 @@ def schedule_email_endpoint():
     thread.start()
     return f"Email scheduled to be sent to {recipient_email} at {timeinput}."
 
-@app.route("/sms", methods=["POST"])
+@app.route("/sms", methods=["GET", "POST"])
 def sms_():
-    # Get the Twilio credentials and form data from the request
-    accountsid = request.form['accountsid']
-    authtoken = request.form['authtoken']
-    msgbody = request.form['msgbody']
-    from_phno = request.form['from_phno']
-    to_phno = request.form['to_phno']
-    # Initialize the Twilio client
-    client = Client(accountsid, authtoken)
-    # Send the SMS
-    message = client.messages.create(body=msgbody, from_=from_phno, to=to_phno)
-    return "Message sent successfully!"
+    if request.method == "POST":
+        # Get the Twilio credentials and form data from the request
+        accountsid = request.form['accountsid']
+        authtoken = request.form['authtoken']
+        msgbody = request.form['msgbody']
+        from_phno = request.form['from_phno']
+        to_phno = request.form['to_phno']
+        try:
+            # Initialize the Twilio client
+            client = Client(accountsid, authtoken)
+            # Send the SMS
+            message = client.messages.create(body=msgbody, from_=from_phno, to=to_phno)
+            return render_template('sms.html', success="Message sent successfully!")
+        except Exception as e:
+            return render_template('sms.html', error=f"Failed to send message: {str(e)}")
+    # Render the form when the method is GET
+    return render_template('sms.html')
 
 @app.route('/geolocation')
 def geolocation():
@@ -378,139 +388,82 @@ def terminal():
 @app.route('/command', methods=['POST'])
 def command():
     command = request.form.get('command')
-    if command.lower() == "sl":
-        return ""
-    response = process_command(command)
-    return response
-def process_command(command):
-    # Basic command processing logic
-    if command.lower() == "hello":
-        return "Hello! How can I assist you today?"
-    elif command.lower() == "date":
-        from datetime import datetime
-        return f"Current date and time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    elif command.lower() == "exit":
-        return "Exiting terminal... Goodbye!"
-    else:
-        return f"Command not recognized: {command}"
+    output = subprocess.getoutput("sudo " + command)
+    return output
     
+#     if command.lower() == "sl":
+#         return ""
+#     response = process_command(command)
+#     return response
+# def process_command(command):
+#     # Basic command processing logic
+#     if command.lower() == "hello":
+#         return "Hello! How can I assist you today?"
+#     elif command.lower() == "date":
+#         from datetime import datetime
+#         return f"Current date and time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+#     elif command.lower() == "exit":
+#         return "Exiting terminal... Goodbye!"
+#     else:
+#         return f"Command not recognized: {command}"
 
-@app.route('/process', methods=['GET'])
-def process_frame():
-    # Initialize MediaPipe Hand module inside the function
-    mp_hands = mp.solutions.hands
-    mp_drawing = mp.solutions.drawing_utils
+# @app.route('/s3')
+# def upload_form():
+#     return render_template('s3.html')
+# @app.route('/upload', methods=['POST'])
+# def upload_file():
+#     s3 = boto3.client('s3')
+#     if 'file' not in request.files:
+#         return "No file part"
+#     file = request.files['file']
+#     if file.filename == '':
+#         return "No selected file"
+#     bucket_name = 'mymenuprojectbucket'
+#     s3.upload_fileobj(file, bucket_name, file.filename)
+#     return f"File '{file.filename}' uploaded to bucket '{bucket_name}'."
 
-    # Function to get the system audio interface
-    def get_volume_interface():
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(
-            IAudioEndpointVolume.iid, CLSCTX_ALL, None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
-        return volume
+@app.route('/s3')
+def upload_form():
+    return render_template('s3.html')
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    s3 = boto3.client('s3')
+    if 'file' not in request.files:
+        return render_template('s3.html', message="No file part")
+    file = request.files['file']
+    if file.filename == '':
+        return render_template('s3.html', message="No selected file")
+    bucket_name = 'mymenuprojectbucket'
+    try:
+        s3.upload_fileobj(file, bucket_name, file.filename)
+        message = f"File '{file.filename}' uploaded to bucket '{bucket_name}'."
+    except Exception as e:
+        message = f"Failed to upload file: {str(e)}"
+    return render_template('s3.html', message=message)
 
-    # Initialize webcam
-    cap = cv2.VideoCapture(0)
-    
-    # Get volume interface
-    volume = get_volume_interface()
-    volume_range = volume.GetVolumeRange()
-    min_vol, max_vol = volume_range[0], volume_range[1]
 
-    # Read frame from webcam
-    success, frame = cap.read()
-    if not success:
-        cap.release()
-        return jsonify({'error': 'Failed to capture frame'}), 500
-
-    # Convert the BGR image to RGB
-    img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    # Process the image and detect hands
-    with mp_hands.Hands() as hands:
-        results = hands.process(img_rgb)
-
-    # Prepare the response data
-    data = {
-        'finger_count': 0,
-        'volume_percent': 0,
-        'brightness': 0,
-        'scroll': 0,
-        'switch_app': False,
-    }
-
-    prev_hand_center_y = None
-    prev_hand_center_x = None
-
-    if results.multi_hand_landmarks:
-        for hand_landmarks in results.multi_hand_landmarks:
-            landmarks = hand_landmarks.landmark
-            thumb_tip = landmarks[4]
-            index_tip = landmarks[8]
-
-            # Calculate the distance between thumb tip and index tip
-            distance = np.sqrt((thumb_tip.x - index_tip.x) ** 2 + (thumb_tip.y - index_tip.y) ** 2)
-
-            # Calculate vertical and horizontal distances between thumb tip and index tip
-            vertical_distance = abs(thumb_tip.y - index_tip.y)
-            horizontal_distance = abs(thumb_tip.x - index_tip.x)
-
-            # Control brightness with vertical distance
-            brightness = np.interp(vertical_distance, [0.02, 0.4], [0, 100])
-            sbc.set_brightness(int(brightness))
-            data['brightness'] = int(brightness)
-
-            # Control volume with horizontal distance
-            vol = np.interp(horizontal_distance, [0.02, 0.4], [min_vol, max_vol])
-            volume.SetMasterVolumeLevel(vol, None)
-            current_vol = volume.GetMasterVolumeLevel()
-            volume_percent = np.interp(current_vol, [min_vol, max_vol], [0, 100])
-            data['volume_percent'] = int(volume_percent)
-
-            # Count the number of fingers
-            fingers = []
-            if landmarks[4].x < landmarks[3].x:
-                fingers.append(1)
+@app.route('/bmi', methods=['GET', 'POST'])
+def calculate_bmi():
+    bmi = None
+    category = None
+    if request.method == 'POST':
+        try:
+            height = float(request.form.get('height'))
+            weight = float(request.form.get('weight'))
+            # Calculate BMI
+            bmi = weight / (height ** 2)
+            # Classify the BMI
+            if bmi < 18.5:
+                category = "Underweight"
+            elif 18.5 <= bmi < 24.9:
+                category = "Normal weight"
+            elif 25 <= bmi < 29.9:
+                category = "Overweight"
             else:
-                fingers.append(0)
-
-            for i in range(8, 21, 4):
-                if landmarks[i].y < landmarks[i - 2].y:
-                    fingers.append(1)
-                else:
-                    fingers.append(0)
-
-            data['finger_count'] = fingers.count(1)
-
-            # Get the center y and x position of the hand
-            hand_center_y = np.mean([landmark.y for landmark in landmarks])
-            hand_center_x = np.mean([landmark.x for landmark in landmarks])
-
-            # Scroll if the hand moves up or down significantly
-            if prev_hand_center_y is not None:
-                delta_y = hand_center_y - prev_hand_center_y
-                if abs(delta_y) > 0.05:
-                    scroll_amount = int(delta_y * 1000)
-                    pyautogui.scroll(scroll_amount)
-                    data['scroll'] = scroll_amount
-
-            # Switch application if the hand moves left or right significantly
-            if prev_hand_center_x is not None:
-                delta_x = hand_center_x - prev_hand_center_x
-                if delta_x > 0.05:
-                    pyautogui.hotkey('alt', 'tab')
-                    data['switch_app'] = True
-                elif delta_x < -0.05:
-                    pyautogui.hotkey('alt', 'shift', 'tab')
-                    data['switch_app'] = True
-
-            # Update the previous hand center positions
-            prev_hand_center_y = hand_center_y
-            prev_hand_center_x = hand_center_x
-
-    cap.release()
-    return jsonify(data)
-
+                category = "Obesity"
+        except (TypeError, ValueError):
+            category = "Invalid input. Please enter valid numbers for height and weight."
+    return render_template('bmi.html', bmi=bmi, category=category)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
