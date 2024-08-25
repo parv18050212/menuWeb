@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Terminal Interface</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #2C3E50;
+            color: #00ff00;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .terminal {
+            background-color: #000000;
+            padding: 20px;
+            border-radius: 5px;
+            width: 800px;
+            max-width: 100%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+        }
+        .output {
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding-right: 10px;
+            white-space: pre-wrap;
+            font-size: 16px;
+            color: #00ff00;
+        }
+        .input {
+            width: 100%;
+            padding: 10px;
+            background-color: #000000;
+            color: #00ff00;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .input:focus {
+            outline: none;
+        }
+        /* Train Animation */
+        .train {
+            display: none;
+            font-size: 18px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .train.active {
+            display: block;
+            animation: moveTrain 5s linear forwards;
+        }
+        @keyframes moveTrain {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="output" id="output"></div>
+        <form action="/command" method="POST">
+            <input type="text" name="command" class="input" id="command" autocomplete="off" placeholder="Enter command...">
+        </form>
+    </div>
+
+    <script>
+        const form = document.querySelector('form');
+        const commandInput = document.getElementById('command');
+        const outputDiv = document.getElementById('output');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const command = commandInput.value;
+            if (command.trim()) {
+                outputDiv.innerHTML += `<div>$ ${command}</div>`;
+                if (command.toLowerCase() === 'sl') {
+                    const trainDiv = document.createElement('div');
+                    trainDiv.classList.add('train', 'active');
+                    trainDiv.innerHTML = "🚂🚃🚃🚃🚃";
+                    outputDiv.appendChild(trainDiv);
+                    trainDiv.addEventListener('animationend', () => {
+                        trainDiv.classList.remove('active');
+                        trainDiv.remove();  // Remove the train after the animation
+                    });
+                } else {
+                    const response = await fetch('/command', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            'command': command
+                        })
+                    });
+                    const data = await response.text();
+                    outputDiv.innerHTML += `<div>${data}</div>`;
+                }
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+                commandInput.value = '';
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                outputDiv.innerHTML = '';  // Clear the terminal output
+            }
+        });
+    </script>
+</body>
+</html>

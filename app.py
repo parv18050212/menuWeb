@@ -365,6 +365,28 @@ def runec2():
         ciec2()
     return 'Done'
 
+@app.route('/terminal')
+def terminal():
+    return render_template('terminal.html')
+@app.route('/command', methods=['POST'])
+def command():
+    command = request.form.get('command')
+    if command.lower() == "sl":
+        return ""
+    response = process_command(command)
+    return response
+def process_command(command):
+    # Basic command processing logic
+    if command.lower() == "hello":
+        return "Hello! How can I assist you today?"
+    elif command.lower() == "date":
+        from datetime import datetime
+        return f"Current date and time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    elif command.lower() == "exit":
+        return "Exiting terminal... Goodbye!"
+    else:
+        return f"Command not recognized: {command}"
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
     

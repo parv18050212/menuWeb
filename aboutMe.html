@@ -95,7 +95,63 @@
             color: #F1C40F;
         }
 
-        
+        .typewriter {
+            display: flex;
+            justify-content: center;
+            align-items: center; /* This aligns the items vertically */
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .typewriter .static-text {
+            color: #ECF0F1;
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .typewriter .dynamic-text {
+            margin-left: 8px;
+            line-height: 24px;
+            height: 24px;
+            overflow: hidden;
+        }
+
+        .dynamic-text li {
+            list-style: none;
+            color: #F1C40F;
+            font-size: 24px;
+            font-weight: 500;
+            position: relative;
+            top: 0;
+            animation: slide 20s steps(5) infinite;
+        }
+
+        @keyframes slide {
+            100% {
+                top: -120px;
+            }
+        }
+
+        .dynamic-text li::after {
+            content: "";
+            left: 0;
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            border-left: 2px solid #F1C40F;
+            animation: typing 4s steps(15) infinite;
+            background-color: #2C3E50;
+        }
+
+        @keyframes typing {
+            40%,
+            60% {
+                left: calc(100%);
+            }
+            100% {
+                left: 0;
+            }
+        }
 
         .main-content p {
             font-size: 18px;
@@ -127,6 +183,16 @@
             <div class="photo-circle"></div>
         </div>
         <h1>PRANAV JAIN</h1>
+        <div class="typewriter">
+            <div class="static-text">I am</div>
+            <ul class="dynamic-text">
+                <li><span>Tech Enthusiast</span></li>
+                <li><span>Coder</span></li>
+                <li><span>Developer</span></li>
+                <li><span>Problem Solver</span></li>
+                <li><span>Innovator</span></li>
+            </ul>
+        </div>
         <p>I am Pranav Jain, the Co-Founder and CTO of Service Lane, driven by a passion for innovation and technology. To me, every challenge is an opportunity to create solutions that make life easier and more connected. My journey in computer science, combined with my deep interest in Python, Linux, and cloud computing, shapes how I approach problems with curiosity, creativity, and a commitment to continuous learning. I believe in the power of technology to transform lives, and my goal is to bridge the gap between people and the services they need through innovative, tech-driven solutions.</p>
     </div>
 </body>
