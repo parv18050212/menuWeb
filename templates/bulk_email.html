@@ -45,13 +45,23 @@
         button:hover {
             background-color: #d4ac0d;
         }
+        .message {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .success {
+            color: #2ECC71;
+        }
+        .error {
+            color: #E74C3C;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h2>Send Bulk Emails</h2>
-        <form action="http://127.0.0.1:5000/sendemails" method="POST">
+        <form method="POST" action="/sendemails">
             <div>
                 <label for="emails">Emails (comma-separated):</label><br>
                 <input type="text" id="emails" name="emails" required>
@@ -68,6 +78,12 @@
                 <button type="submit">Send Emails</button>
             </div>
         </form>
+        
+        {% if success_message %}
+        <div class="message success">{{ success_message }}</div>
+        {% elif error_message %}
+        <div class="message error">{{ error_message }}</div>
+        {% endif %}
     </div>
 
 </body>

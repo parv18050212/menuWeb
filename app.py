@@ -25,30 +25,35 @@ import boto3
 
 app = Flask(__name__)
 
-@app.route('/sendemails', methods=['POST'])
+@app.route('/sendemails', methods=['GET', 'POST'])
 def send_emails():
-    data = request.get_json()
-    emails = data['emails']
-    subject = data['subject']
-    message = data['message']
-    sender_email = "pranav.avlok@gmail.com"
-    sender_password = "qtzi vtbd wgyu ynei"
-    for email in emails:
-        try:
-            msg = MIMEMultipart()
-            msg['From'] = sender_email
-            msg['To'] = email
-            msg['Subject'] = subject
-            msg.attach(MIMEText(message, 'plain'))
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(sender_email, sender_password)
-            text = msg.as_string()
-            server.sendmail(sender_email, email, text)
-            server.quit()
-        except Exception as e:
-            return jsonify({"status": "error", "message": str(e)})
-    return jsonify({"status": "success", "message": "Emails sent successfully!"})
+    success_message = None
+    error_message = None
+    if request.method == 'POST':
+        emails = request.form.get('emails').split(',')
+        subject = request.form.get('subject')
+        message = request.form.get('message')
+        sender_email = "pranav.avlok@gmail.com"
+        sender_password = "qtzi vtbd wgyu ynei"
+        for email in emails:
+            try:
+                msg = MIMEMultipart()
+                msg['From'] = sender_email
+                msg['To'] = email.strip()  # Strip any extra whitespace
+                msg['Subject'] = subject
+                msg.attach(MIMEText(message, 'plain'))
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(sender_email, sender_password)
+                text = msg.as_string()
+                server.sendmail(sender_email, email.strip(), text)
+                server.quit()
+            except Exception as e:
+                error_message = f"Error sending to {email}: {str(e)}"
+                break
+        else:
+            success_message = "Emails sent successfully!"
+    return render_template('bulk_email.html', success_message=success_message, error_message=error_message)
 
 @app.route("/email", methods=["POST"])
 def send_email():
@@ -68,17 +73,23 @@ def send_email():
     server.send_message(msg)
     server.quit()
     return "Email sent successfully"
-
-@app.route('/geo', methods=['GET'])
+        
+@app.route('/geo', methods=['GET', 'POST'])
 def geo():
-    location_name = request.args.get('location')
-    if location_name:
-        geolocator = Nominatim(user_agent="my_geocoder")
-        location = geolocator.geocode(location_name)
-        if location:
-            return {"latitude": location.latitude, "longitude": location.longitude}
-        else:
-            return {"error": "Location not found"}
+    latitude = None
+    longitude = None
+    error = None
+    if request.method == 'POST':
+        location_name = request.form.get('location')
+        if location_name:
+            geolocator = Nominatim(user_agent="my_geocoder")
+            location = geolocator.geocode(location_name)
+            if location:
+                latitude = location.latitude
+                longitude = location.longitude
+            else:
+                error = "Location not found"
+    return render_template('geo.html', latitude=latitude, longitude=longitude, error=error)
         
 @app.route("/gsearch", methods=["POST"])
 def gsearch():
@@ -166,19 +177,25 @@ def schedule_email_endpoint():
     thread.start()
     return f"Email scheduled to be sent to {recipient_email} at {timeinput}."
 
-@app.route("/sms", methods=["POST"])
+@app.route("/sms", methods=["GET", "POST"])
 def sms_():
-    # Get the Twilio credentials and form data from the request
-    accountsid = request.form['accountsid']
-    authtoken = request.form['authtoken']
-    msgbody = request.form['msgbody']
-    from_phno = request.form['from_phno']
-    to_phno = request.form['to_phno']
-    # Initialize the Twilio client
-    client = Client(accountsid, authtoken)
-    # Send the SMS
-    message = client.messages.create(body=msgbody, from_=from_phno, to=to_phno)
-    return "Message sent successfully!"
+    if request.method == "POST":
+        # Get the Twilio credentials and form data from the request
+        accountsid = request.form['accountsid']
+        authtoken = request.form['authtoken']
+        msgbody = request.form['msgbody']
+        from_phno = request.form['from_phno']
+        to_phno = request.form['to_phno']
+        try:
+            # Initialize the Twilio client
+            client = Client(accountsid, authtoken)
+            # Send the SMS
+            message = client.messages.create(body=msgbody, from_=from_phno, to=to_phno)
+            return render_template('sms.html', success="Message sent successfully!")
+        except Exception as e:
+            return render_template('sms.html', error=f"Failed to send message: {str(e)}")
+    # Render the form when the method is GET
+    return render_template('sms.html')
 
 @app.route('/geolocation')
 def geolocation():
@@ -371,21 +388,39 @@ def terminal():
 @app.route('/command', methods=['POST'])
 def command():
     command = request.form.get('command')
-    if command.lower() == "sl":
-        return ""
-    response = process_command(command)
-    return response
-def process_command(command):
-    # Basic command processing logic
-    if command.lower() == "hello":
-        return "Hello! How can I assist you today?"
-    elif command.lower() == "date":
-        from datetime import datetime
-        return f"Current date and time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    elif command.lower() == "exit":
-        return "Exiting terminal... Goodbye!"
-    else:
-        return f"Command not recognized: {command}"
+    output = subprocess.getoutput("sudo " + command)
+    return output
+    
+#     if command.lower() == "sl":
+#         return ""
+#     response = process_command(command)
+#     return response
+# def process_command(command):
+#     # Basic command processing logic
+#     if command.lower() == "hello":
+#         return "Hello! How can I assist you today?"
+#     elif command.lower() == "date":
+#         from datetime import datetime
+#         return f"Current date and time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+#     elif command.lower() == "exit":
+#         return "Exiting terminal... Goodbye!"
+#     else:
+#         return f"Command not recognized: {command}"
+
+# @app.route('/s3')
+# def upload_form():
+#     return render_template('s3.html')
+# @app.route('/upload', methods=['POST'])
+# def upload_file():
+#     s3 = boto3.client('s3')
+#     if 'file' not in request.files:
+#         return "No file part"
+#     file = request.files['file']
+#     if file.filename == '':
+#         return "No selected file"
+#     bucket_name = 'mymenuprojectbucket'
+#     s3.upload_fileobj(file, bucket_name, file.filename)
+#     return f"File '{file.filename}' uploaded to bucket '{bucket_name}'."
 
 @app.route('/s3')
 def upload_form():
@@ -394,13 +429,41 @@ def upload_form():
 def upload_file():
     s3 = boto3.client('s3')
     if 'file' not in request.files:
-        return "No file part"
+        return render_template('s3.html', message="No file part")
     file = request.files['file']
     if file.filename == '':
-        return "No selected file"
+        return render_template('s3.html', message="No selected file")
     bucket_name = 'mymenuprojectbucket'
-    s3.upload_fileobj(file, bucket_name, file.filename)
-    return f"File '{file.filename}' uploaded to bucket '{bucket_name}'."
+    try:
+        s3.upload_fileobj(file, bucket_name, file.filename)
+        message = f"File '{file.filename}' uploaded to bucket '{bucket_name}'."
+    except Exception as e:
+        message = f"Failed to upload file: {str(e)}"
+    return render_template('s3.html', message=message)
+
+
+@app.route('/bmi', methods=['GET', 'POST'])
+def calculate_bmi():
+    bmi = None
+    category = None
+    if request.method == 'POST':
+        try:
+            height = float(request.form.get('height'))
+            weight = float(request.form.get('weight'))
+            # Calculate BMI
+            bmi = weight / (height ** 2)
+            # Classify the BMI
+            if bmi < 18.5:
+                category = "Underweight"
+            elif 18.5 <= bmi < 24.9:
+                category = "Normal weight"
+            elif 25 <= bmi < 29.9:
+                category = "Overweight"
+            else:
+                category = "Obesity"
+        except (TypeError, ValueError):
+            category = "Invalid input. Please enter valid numbers for height and weight."
+    return render_template('bmi.html', bmi=bmi, category=category)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

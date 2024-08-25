@@ -55,6 +55,24 @@
         input[type="submit"]:hover {
             background-color: #D4AC0D;
         }
+
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            background-color: #2ECC71;
+            color: #2C3E50;
+        }
+
+        .error {
+            background-color: #E74C3C;
+            color: #ECF0F1;
+        }
     </style>
 </head>
 <body>
@@ -63,5 +81,11 @@
         <input type="file" name="file">
         <input type="submit" value="Upload">
     </form>
+
+    {% if message %}
+        <div class="message {{ 'success' if 'uploaded to bucket' in message else 'error' }}">
+            {{ message }}
+        </div>
+    {% endif %}
 </body>
 </html>
