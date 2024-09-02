@@ -33,8 +33,8 @@ def send_emails():
         emails = request.form.get('emails').split(',')
         subject = request.form.get('subject')
         message = request.form.get('message')
-        sender_email = "pranav.avlok@gmail.com"
-        sender_password = "qtzi vtbd wgyu ynei"
+        sender_email = "parvagarwal73@gmail.com"
+        sender_password = "lbgy alwa lglz zjeo"
         for email in emails:
             try:
                 msg = MIMEMultipart()
